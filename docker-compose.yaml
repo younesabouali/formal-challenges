@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  pet-finder:
+    build: ./pet-finder
+    volumes:
+      - "pet-finder:/app"
+    stdin_open: true # docker run -i
+    tty: true
+
+    ports:
+      - 8080:8080
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: stupid-password
+      POSTGRES_DB: pet-finder
+      POSTGRES_USER: user
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./db:/home
+    ports:
+      - 5432:5432
+volumes:
+  pet-finder:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/home/younes/Projects/formal-challenges/pet-finder"
