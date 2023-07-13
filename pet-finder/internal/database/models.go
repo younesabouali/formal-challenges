@@ -21,6 +21,7 @@ const (
 	EventNamesFound       EventNames = "found"
 	EventNamesRewarded    EventNames = "rewarded"
 )
+
 func (e *EventNames) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
@@ -151,6 +152,17 @@ type MissingPet struct {
 	LostIn      interface{}
 	LostAt      time.Time
 	UserID      uuid.UUID
+}
+
+type PetsRecord struct {
+	ID          uuid.UUID
+	Createdat   time.Time
+	Updatedat   time.Time
+	PetID       uuid.UUID
+	UserID      uuid.UUID
+	EventName   EventNames
+	ImageUrl    sql.NullString
+	Description sql.NullString
 }
 
 type User struct {
