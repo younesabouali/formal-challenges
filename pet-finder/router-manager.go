@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
+	"github.com/younesabouali/formal-challenges/pet-finder/Controllers"
+	"github.com/younesabouali/formal-challenges/pet-finder/internal/database"
 )
 
 func AppRouter(port string, DB *database.Queries) {
@@ -24,6 +26,7 @@ func AppRouter(port string, DB *database.Queries) {
 		),
 	)
 	v1Router := chi.NewRouter()
+	v1Router.Mount("/users", Controllers.UserRouter(DB))
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
 		Handler: router,
