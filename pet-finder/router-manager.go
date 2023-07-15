@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/younesabouali/formal-challenges/pet-finder/Controllers"
+	"github.com/younesabouali/formal-challenges/pet-finder/Middlewares"
 	"github.com/younesabouali/formal-challenges/pet-finder/internal/database"
 )
 
@@ -25,8 +26,12 @@ func AppRouter(port string, DB *database.Queries) {
 			},
 		),
 	)
+	middlewares := Middlewares.Middlewares{DB: DB}
+	routeAuth, store := middlewares.Init()
 	v1Router := chi.NewRouter()
-	v1Router.Mount("/users", Controllers.UserRouter(DB))
+	v1Router.Mount("/users", Controllers.UserRouter(DB, middlewares))
+	v1Router.Mount("/missing_pets", Controllers.MissingPetsRouter(DB, middlewares))
+	v1Router.Mount("/events_recorder", Controllers.EventsRecorderRouter(DB, middlewares))
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
 		Handler: router,

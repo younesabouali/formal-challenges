@@ -95,16 +95,17 @@ func (c UserController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.RespondWithJSON(w, 200, foundUser.ApiKey)
 }
-func InitializeDependencies(DB *database.Queries) (Middlewares.Middlewares, *chi.Mux) {
-	middlewares := Middlewares.Middlewares{DB: DB}
+func InitializeDependencies(DB *database.Queries) *chi.Mux {
+	// middlewares := Middlewares.Middlewares{DB: DB}
 	router := chi.NewRouter()
-	return middlewares, router
+	return router
 }
-func UserRouter(DB *database.Queries) *chi.Mux {
+func UserRouter(DB *database.Queries, middlewares Middlewares.Middlewares) *chi.Mux {
 	userController := UserController{DB}
-	_, router := InitializeDependencies(DB)
+	router := InitializeDependencies(DB)
 	router.Post("/registerUser", userController.CreateUserHandler)
 	router.Get("/login", userController.Login)
+	// router.Get("/CreateAdmin", middlewares.IsAdmin(userController.CreateAdmin))
 	return router
 
 }
