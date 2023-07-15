@@ -9,6 +9,7 @@ import (
 	"github.com/younesabouali/formal-challenges/pet-finder/Controllers"
 	"github.com/younesabouali/formal-challenges/pet-finder/Middlewares"
 	"github.com/younesabouali/formal-challenges/pet-finder/internal/database"
+	"github.com/younesabouali/formal-challenges/pet-finder/utils"
 )
 
 func AppRouter(port string, DB *database.Queries) {
@@ -32,6 +33,7 @@ func AppRouter(port string, DB *database.Queries) {
 	v1Router.Mount("/users", Controllers.UserRouter(DB, middlewares))
 	v1Router.Mount("/missing_pets", Controllers.MissingPetsRouter(DB, middlewares))
 	v1Router.Mount("/events_recorder", Controllers.EventsRecorderRouter(DB, middlewares))
+	v1Router.Mount("/back-office", Controllers.BackofficeRouter(DB, middlewares, store))
 	v1Router.Mount("/auth", routeAuth)
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
