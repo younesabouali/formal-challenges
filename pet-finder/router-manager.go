@@ -27,6 +27,7 @@ func AppRouter(port string, DB *database.Queries) {
 			},
 		),
 	)
+
 	middlewares := Middlewares.Middlewares{DB: DB}
 	routeAuth, store := middlewares.Init()
 	v1Router := chi.NewRouter()
@@ -36,6 +37,12 @@ func AppRouter(port string, DB *database.Queries) {
 	v1Router.Mount("/back-office", Controllers.BackofficeRouter(DB, middlewares, store))
 	v1Router.Mount("/auth", routeAuth)
 	router.Mount("/v1", v1Router)
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		type message struct {
+			message string
+		}
+		utils.RespondWithJSON(w, 200, message{})
+	})
 	srv := &http.Server{
 		Handler: router,
 		Addr:    ":" + port,
