@@ -32,6 +32,7 @@ func AppRouter(port string, DB *database.Queries) {
 	v1Router.Mount("/users", Controllers.UserRouter(DB, middlewares))
 	v1Router.Mount("/missing_pets", Controllers.MissingPetsRouter(DB, middlewares))
 	v1Router.Mount("/events_recorder", Controllers.EventsRecorderRouter(DB, middlewares))
+	v1Router.Mount("/auth", routeAuth)
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
 		Handler: router,
