@@ -1,3 +1,0 @@
-alias mig="cd /app/sql/schema && goose postgres postgres://user:stupid-password@db/pet-finder up"
-alias migb="cd /app/sql/schema && goose postgres postgres://user:stupid-password@db/pet-finder down"
-alias run="go build && ./pet-finder"
