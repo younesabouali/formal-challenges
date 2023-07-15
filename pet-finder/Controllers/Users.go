@@ -29,6 +29,37 @@ func HashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
+func (c UserController) CreateAdmin(w http.ResponseWriter, r *http.Request, user database.User) {
+	type userParams struct {
+		Name     string
+		Email    string
+		Password string
+	}
+	result, err := utils.BodyParser(r, userParams{})
+	if err != nil {
+		utils.RespondWithError(w, 400, "couldn't parse user")
+		return
+	}
+	// validate the email and password
+	hash, err := HashPassword(result.Password)
+	if err != nil {
+		utils.RespondWithError(w, 400, "couldn't parse user")
+		return
+	}
+	createdUser, err := c.DB.CreateUser(context.Background(), database.CreateUserParams{ID: uuid.New(),
+		Name:      result.Name,
+		Updatedat: time.Now(),
+		Createdat: time.Now(),
+		Email:     result.Email,
+		Role:      "admin",
+		Password:  hash,
+	})
+	if err != nil {
+		utils.RespondWithError(w, 400, "Couldn't create user")
+		return
+	}
+	utils.RespondWithJSON(w, 200, createdUser.ApiKey)
+}
 func (c UserController) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	type userParams struct {
 		Name     string

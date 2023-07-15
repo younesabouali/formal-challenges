@@ -12,7 +12,6 @@ import (
 
 var ErrNoAuthHeaderIncluded = errors.New("no authorization header included")
 
-
 type Middlewares struct {
 	DB *database.Queries
 }
@@ -52,4 +51,15 @@ func (m *Middlewares) Auth(auth authedHandler) func(w http.ResponseWriter, r *ht
 	}
 
 }
+func (m *Middlewares) IsAdmin(auth authedHandler) func(w http.ResponseWriter, r *http.Request) {
+	return m.Auth(
+		func(w http.ResponseWriter, r *http.Request, user database.User) {
 
+			if user.Role != "admin" {
+				utils.RespondWithError(w, 403, "Unauthorized")
+				return
+			}
+			auth(w, r, user)
+
+		})
+}
