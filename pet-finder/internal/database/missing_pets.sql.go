@@ -70,16 +70,28 @@ func (q *Queries) CreateMissingPet(ctx context.Context, arg CreateMissingPetPara
 }
 
 const getMissingPets = `-- name: GetMissingPets :many
-SELECT id, createdat, updatedat, pet_name, description, image_url, status, lost_in, lost_at, user_id FROM missing_pets LIMIT $1 OFFSET $2
+SELECT id, createdat, updatedat, pet_name, description, image_url, status, lost_in, lost_at, user_id
+FROM missing_pets
+WHERE status = 'missing' AND
+      ST_Distance(lost_in, ST_SetSRID(ST_MakePoint($1,$2), 4326)) <= $3 LIMIT $4 OFFSET $5
 `
 
 type GetMissingPetsParams struct {
-	Limit  int32
-	Offset int32
+	StMakepoint   interface{}
+	StMakepoint_2 interface{}
+	LostIn        interface{}
+	Limit         int32
+	Offset        int32
 }
 
 func (q *Queries) GetMissingPets(ctx context.Context, arg GetMissingPetsParams) ([]MissingPet, error) {
-	rows, err := q.db.QueryContext(ctx, getMissingPets, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, getMissingPets,
+		arg.StMakepoint,
+		arg.StMakepoint_2,
+		arg.LostIn,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +125,17 @@ func (q *Queries) GetMissingPets(ctx context.Context, arg GetMissingPetsParams) 
 }
 
 const setPetAsFound = `-- name: SetPetAsFound :one
-UPDATE missing_pets SET status='found' WHERE id =$1 
+UPDATE missing_pets SET status='found' WHERE id =$1 AND user_id=$2 
 RETURNING id, createdat, updatedat, pet_name, description, image_url, status, lost_in, lost_at, user_id
 `
 
-func (q *Queries) SetPetAsFound(ctx context.Context, id uuid.UUID) (MissingPet, error) {
-	row := q.db.QueryRowContext(ctx, setPetAsFound, id)
+type SetPetAsFoundParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) SetPetAsFound(ctx context.Context, arg SetPetAsFoundParams) (MissingPet, error) {
+	row := q.db.QueryRowContext(ctx, setPetAsFound, arg.ID, arg.UserID)
 	var i MissingPet
 	err := row.Scan(
 		&i.ID,

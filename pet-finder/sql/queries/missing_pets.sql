@@ -12,8 +12,11 @@ VALUES ($1,$2,$3,
 returning *;
 
 -- name: GetMissingPets :many
-SELECT * FROM missing_pets LIMIT $1 OFFSET $2;
+SELECT *
+FROM missing_pets
+WHERE status = 'missing' AND
+      ST_Distance(lost_in, ST_SetSRID(ST_MakePoint($1,$2), 4326)) <= $3 LIMIT $4 OFFSET $5;
 
 -- name: SetPetAsFound :one
-UPDATE missing_pets SET status='found' WHERE id =$1 
+UPDATE missing_pets SET status='found' WHERE id =$1 AND user_id=$2 
 RETURNING *;

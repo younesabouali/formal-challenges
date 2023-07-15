@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/younesabouali/formal-challenges/pet-finder/Middlewares"
 	"github.com/younesabouali/formal-challenges/pet-finder/internal/database"
 	"github.com/younesabouali/formal-challenges/pet-finder/utils"
 )
@@ -16,28 +17,27 @@ type MissingPetsController struct {
 	DB *database.Queries
 }
 
-func (c MissingPetsController) getMissingPets(w http.ResponseWriter, r *http.Request) {
+func (c MissingPetsController) getNearbyMissingPets(w http.ResponseWriter, r *http.Request) {
 
 	type URLParams struct {
-		Limit  int
-		Offset int
+		Limit     int32
+		Offset    int32
+		Latitude  float64
+		Longitude float64
+		Distance  float64
 	}
-	dbParams := database.GetMissingPetsParams{}
-	e, err := utils.ParseInt32(utils.UrlParamsParser(r, "Limit"))
+
+	body, err := utils.BodyParser(r, URLParams{})
 	if err != nil {
-		utils.RespondWithError(w, 400, "Couldn't Search Missing pets")
+		utils.RespondWithError(w, 400, "Unable to parse params")
 		return
 	}
-	dbParams.Limit = e
-	e, err = utils.ParseInt32(utils.UrlParamsParser(r, "Offset"))
+	// point := "ST_SetSRID(ST_MakePoint(42.123450, -71.987650), 4326)"
+	// point := fmt.Sprintf("ST_SetSRID(ST_MakePoint(%f, %f), 4326)", body.Longitude, body.Latitude)
+	// fmt.Println(point)
+	missingPets, err := c.DB.GetMissingPets(context.Background(), database.GetMissingPetsParams{StMakepoint: body.Latitude, StMakepoint_2: body.Longitude, LostIn: body.Distance, Limit: body.Limit, Offset: body.Offset})
 	if err != nil {
-		utils.RespondWithError(w, 400, "Unable to parse Params")
-		return
-	}
-	dbParams.Offset = e
-	missingPets, err := c.DB.GetMissingPets(context.Background(), dbParams)
-	if err != nil {
-		fmt.Println(err.Error(), dbParams)
+		println(err.Error())
 		utils.RespondWithError(w, 404, "Unable to perform search")
 		return
 	}
@@ -50,8 +50,9 @@ func (c MissingPetsController) createMessingPetHandler(w http.ResponseWriter, r 
 		Description string
 		ImageUrl    string
 
-		Lost_in [2]float64
-		Lost_at string
+		Longitude float64
+		Latitude  float64
+		Lost_at   string
 	}
 	result, err := utils.BodyParser(r, createMissingPetParams{})
 	if err != nil {
@@ -63,10 +64,11 @@ func (c MissingPetsController) createMessingPetHandler(w http.ResponseWriter, r 
 	LostAt, err := time.Parse(time.RFC3339, result.Lost_at)
 	if err != nil {
 
-		utils.RespondWithError(w, 400, "couldn't parse missing Pet Params")
+		utils.RespondWithError(w, 400, "Invalid date")
 		return
 	}
 
+	point := fmt.Sprintf("POINT(%f %f)", result.Longitude, result.Latitude)
 	createdMissingPet, err := c.DB.CreateMissingPet(context.Background(), database.CreateMissingPetParams{
 		ID:        defaultParams.Id,
 		Createdat: defaultParams.CreatedAt,
@@ -76,21 +78,28 @@ func (c MissingPetsController) createMessingPetHandler(w http.ResponseWriter, r 
 		PetName:     result.PetName,
 		Description: sql.NullString{Valid: true, String: result.Description},
 
-		LostIn:   result.Lost_in,
+		LostIn: point,
+
 		LostAt:   LostAt,
 		ImageUrl: sql.NullString{Valid: true, String: result.ImageUrl},
 
 		UserID: user.ID,
 	})
+	if err != nil {
+
+		fmt.Println(err)
+		utils.RespondWithError(w, 400, "Couldn't save the missing pet")
+		return
+	}
 	utils.RespondWithJSON(w, 200, createdMissingPet)
 
 }
-func MissingPetsRouter(DB *database.Queries) *chi.Mux {
+func MissingPetsRouter(DB *database.Queries, middlewares Middlewares.Middlewares) *chi.Mux {
 	missingPetController := MissingPetsController{DB}
-	middlewares, router := InitializeDependencies(DB)
+	router := InitializeDependencies(DB)
 	router.Post("/newMissingPet", middlewares.Auth(missingPetController.createMessingPetHandler))
 
-	router.Get("/", missingPetController.getMissingPets)
+	router.Post("/nearbyMissingPets", missingPetController.getNearbyMissingPets)
 	// router.Get("/", userController.Login)
 	return router
 

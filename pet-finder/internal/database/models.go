@@ -17,6 +17,7 @@ type EventNames string
 
 const (
 	EventNamesSighted     EventNames = "sighted"
+	EventNamesCommentary  EventNames = "commentary"
 	EventNamesAreaChecked EventNames = "area_checked"
 	EventNamesFound       EventNames = "found"
 	EventNamesRewarded    EventNames = "rewarded"
@@ -155,14 +156,17 @@ type MissingPet struct {
 }
 
 type PetsRecord struct {
-	ID          uuid.UUID
-	Createdat   time.Time
-	Updatedat   time.Time
-	PetID       uuid.UUID
-	UserID      uuid.UUID
-	EventName   EventNames
-	ImageUrl    sql.NullString
-	Description sql.NullString
+	ID            uuid.UUID
+	Createdat     time.Time
+	Updatedat     time.Time
+	PetID         uuid.UUID
+	UserID        uuid.UUID
+	EventName     EventNames
+	ImageUrl      sql.NullString
+	Description   sql.NullString
+	EventLocation interface{}
+	Area          interface{}
+	EventTime     sql.NullTime
 }
 
 type User struct {
