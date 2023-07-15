@@ -1,17 +1,27 @@
 version: "3.8"
 services:
+  reverse-proxy:
+    build: ./reverse-proxy
+    volumes:
+      - "reverse-proxy:/app"
+    stdin_open: true # docker run -i
+    tty: true
+    ports:
+      - 2000:2000
+      - 2001:2001
   pet-finder:
     build: ./pet-finder
     volumes:
       - "pet-finder:/app"
     stdin_open: true # docker run -i
     tty: true
-
     ports:
       - 8080:8080
+      - 80:80
+      - 443:443
   db:
-    image: postgres:15-alpine
-    restart: always
+    image: postgis/postgis
+    # restart: always
     environment:
       POSTGRES_PASSWORD: stupid-password
       POSTGRES_DB: pet-finder
@@ -20,7 +30,7 @@ services:
       - ./data:/var/lib/postgresql/data
       - ./db:/home
     ports:
-      - 5432:5432
+      - 1800:5432
 volumes:
   pet-finder:
     driver: local
@@ -28,3 +38,10 @@ volumes:
       type: "none"
       o: "bind"
       device: "/home/younes/Projects/formal-challenges/pet-finder"
+
+  reverse-proxy:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: "/home/younes/Projects/formal-challenges/reverse-proxy"
