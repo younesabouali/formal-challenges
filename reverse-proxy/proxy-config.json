@@ -1,0 +1,32 @@
+{
+  "SpinTarget": true,
+  "Port": "2000",
+  "TargetUrl": "http://localhost:2001",
+  "CensorFields": ["Password"],
+
+  "InspectRequest": [
+    {
+      "Method": ["Get"]
+    }
+  ],
+
+  "LogRequest": [{}],
+  "LogResponse": [{}],
+  "BlockRequest": [
+    {
+      "Method": ["Post"],
+      "Headers": {
+        "Includes": []
+      },
+      "Query": {
+        "Includes": []
+      },
+      "Path": {
+        "Includes": []
+      },
+      "Body": {
+        "Includes": []
+      }
+    }
+  ]
+}
