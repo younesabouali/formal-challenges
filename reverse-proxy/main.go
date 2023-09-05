@@ -18,7 +18,5 @@ func main() {
 	proxyInstance := Proxy{config: &proxyConfig}
 	go proxyInstance.NewReverseProxy(&wg)
 	wg.Wait()
-	// log.Fatal(server.ListenAndServe())
 }
 
-// NewReverseProxy creates a new reverse proxy handler
